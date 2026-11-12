@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { motion } from 'framer-motion';
 import { ArrowDown, ArrowDownRight, ArrowRight, ArrowUpRight, BriefcaseBusiness, Code2, GraduationCap, Mail, MapPin, Menu, X, BrainCircuit, Rocket, GitBranch } from 'lucide-react';
+import portraitUrl from '../assets/images/parth-portrait.jpeg';
 import './style.css';
 
 const resume = '/portfolio/ParthPawar-Resume.pdf.pdf';
@@ -26,6 +27,113 @@ function Header() {
   return <header className="header"><a className="brand" href="#home">Parth Pawar<span>.</span></a><nav className={open ? 'nav nav-open' : 'nav'}>{links.map(([label, href]) => <a key={label} href={href} onClick={() => setOpen(false)}>{label}</a>)}<a className="nav-resume" href={resume} target="_blank" rel="noreferrer">Resume <ArrowUpRight size={14}/></a></nav><button className="menu-toggle" aria-label="Toggle menu" onClick={() => setOpen(!open)}>{open ? <X/> : <Menu/>}</button></header>;
 }
 
+function ParticlesPortrait() {
+  const frameRef = useRef(null);
+  const canvasRef = useRef(null);
+  const imageRef = useRef(null);
+  useEffect(() => {
+    const frame = frameRef.current;
+    const canvas = canvasRef.current;
+    const image = imageRef.current;
+    const context = canvas.getContext('2d', { alpha: true });
+    const sample = document.createElement('canvas');
+    const sampleContext = sample.getContext('2d', { willReadFrequently: true });
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let particles = [];
+    let width = 0;
+    let height = 0;
+    let frameId;
+    let active = false;
+    const pointer = { x: -1000, y: -1000 };
+
+    const resize = () => {
+      const rect = frame.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      width = rect.width;
+      height = rect.height;
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (!image.complete || !image.naturalWidth) return;
+      sample.width = Math.max(1, Math.round(width));
+      sample.height = Math.max(1, Math.round(height));
+      sampleContext.clearRect(0, 0, sample.width, sample.height);
+      const scale = Math.max(sample.width / image.naturalWidth, sample.height / image.naturalHeight);
+      const drawWidth = image.naturalWidth * scale;
+      const drawHeight = image.naturalHeight * scale;
+      sampleContext.drawImage(image, (sample.width - drawWidth) / 2, (sample.height - drawHeight) * .35, drawWidth, drawHeight);
+      const pixels = sampleContext.getImageData(0, 0, sample.width, sample.height).data;
+      particles = [];
+      const gap = width < 500 ? 6 : 7;
+      for (let y = 2; y < sample.height; y += gap) {
+        for (let x = 2; x < sample.width; x += gap) {
+          const index = (y * sample.width + x) * 4;
+          const r = pixels[index], g = pixels[index + 1], b = pixels[index + 2];
+          const luminance = (r * .299 + g * .587 + b * .114) / 255;
+          const color = luminance < .26 ? '#17345f' : luminance > .76 ? '#f4dfb2' : '#ef542b';
+          particles.push({ x, y, ox: x, oy: y, vx: 0, vy: 0, color, size: 2.1 + Math.random() * 1.6 });
+        }
+      }
+    };
+    const draw = () => {
+      frameId = undefined;
+      context.clearRect(0, 0, width, height);
+      const radius = 94;
+      let moving = false;
+      for (const particle of particles) {
+        if (active && !reduceMotion.matches) {
+          const dx = particle.x - pointer.x;
+          const dy = particle.y - pointer.y;
+          const distance = Math.hypot(dx, dy);
+          if (distance < radius && distance > 0) {
+            const force = (radius - distance) / radius * 8;
+            particle.vx += dx / distance * force;
+            particle.vy += dy / distance * force;
+          }
+        }
+        particle.vx += (particle.ox - particle.x) * .075;
+        particle.vy += (particle.oy - particle.y) * .075;
+        particle.vx *= .79;
+        particle.vy *= .79;
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        if (Math.abs(particle.vx) > .08 || Math.abs(particle.vy) > .08 || Math.abs(particle.x - particle.ox) > .15 || Math.abs(particle.y - particle.oy) > .15) moving = true;
+        context.fillStyle = particle.color;
+        context.globalAlpha = active ? .94 : 0;
+        context.fillRect(particle.x, particle.y, particle.size, particle.size);
+      }
+      context.globalAlpha = 1;
+      if ((active && !reduceMotion.matches) || moving) frameId = requestAnimationFrame(draw);
+    };
+    const schedule = () => { if (frameId === undefined) frameId = requestAnimationFrame(draw); };
+    const onMove = event => {
+      const rect = frame.getBoundingClientRect();
+      active = true;
+      pointer.x = event.clientX - rect.left;
+      pointer.y = event.clientY - rect.top;
+      schedule();
+    };
+    const onLeave = () => { active = false; pointer.x = -1000; pointer.y = -1000; };
+    image.addEventListener('load', resize);
+    const observer = new ResizeObserver(resize);
+    observer.observe(frame);
+    frame.addEventListener('pointermove', onMove);
+    frame.addEventListener('pointerleave', onLeave);
+    resize();
+    schedule();
+    return () => {
+      cancelAnimationFrame(frameId);
+      observer.disconnect();
+      image.removeEventListener('load', resize);
+      frame.removeEventListener('pointermove', onMove);
+      frame.removeEventListener('pointerleave', onLeave);
+    };
+  }, []);
+  return <div className="portrait-frame" ref={frameRef}><img ref={imageRef} src={portraitUrl} alt="Portrait of Parth Pawar"/><canvas className="portrait-particles" ref={canvasRef} aria-hidden="true"/></div>;
+}
+
 function ProjectArt({ kind }) {
   if (kind === 'eeg') return <div className="mock-window"><div className="mock-top"><i/><i/><i/></div><div className="cluster-tree"><span/><span/><span/><span/><span/><span/><b/><b/><b/></div><div className="mock-lines"><i/><i/><i/></div></div>;
   if (kind === 'campus') return <div className="mock-window campus-ui"><div className="mock-top"><i/><i/><i/></div><div className="ui-title">Good morning, Parth <span>☀️</span></div><div className="ui-boxes"><i/><i/><i/></div><div className="ui-row"><b/><span/><span/></div><div className="ui-row"><b/><span/><span/></div><div className="ui-row"><b/><span/><span/></div></div>;
@@ -41,7 +149,7 @@ function ProjectCard({ project, index }) {
 function App() {
   return <><Header/><main id="home">
     <section className="hero page-wrap"><div className="hero-copy"><div className="edition"><span>AI / ML</span><span>Engineer in progress</span></div><p className="eyebrow">CURIOUS MIND. BUILDER'S HANDS.</p><h1>Ideas into<br/><em>impact.</em></h1><p className="hero-sub">Hey, I’m Parth — an AI/ML engineering student who loves building useful things and figuring out how they can make a difference.</p><div className="hero-actions"><a className="button button-dark" href="#work">Explore my work <ArrowDownRight size={17}/></a><a className="text-link" href={resume} target="_blank" rel="noreferrer">Download resume <ArrowDown size={15}/></a></div><div className="hero-meta"><span><MapPin size={15}/> Pune, India</span><span className="availability"><i/> Open to good ideas</span></div></div>
-      <div className="portrait-stage"><Doodle className="doodle-star">✳</Doodle><Doodle className="doodle-smile">☺</Doodle><svg className="orbit" viewBox="0 0 540 540" fill="none" aria-hidden="true"><path d="M91 108C152 25 397 40 466 156c68 113-3 276-113 319C238 521 93 433 62 311 40 224 53 158 91 108Z" stroke="#315EFB" strokeWidth="1.5" strokeDasharray="5 7"/><path d="M50 370c-46 59 19 115 76 84" stroke="#ff8275" strokeWidth="2" strokeLinecap="round"/></svg><div className="portrait-blob"/><div className="portrait-frame"><img src="/portfolio/assets/images/parth-portrait.jpg" alt="Portrait of Parth Pawar"/></div><div className="identity-card"><div className="identity-top"><b>Parth Pawar</b><span>He/Him</span></div><div><MapPin size={14}/> Pune, India</div><div><Mail size={14}/> parthpawarsnap11@gmail.com</div><div><BrainCircuit size={14}/> AI/ML Engineering</div><div className="identity-social"><a aria-label="LinkedIn" href="https://www.linkedin.com/in/parth-pawar/" target="_blank" rel="noreferrer"><BriefcaseBusiness size={15}/></a><a aria-label="GitHub" href="https://github.com/parthpawarsnap11-create" target="_blank" rel="noreferrer"><GitBranch size={15}/></a><span>Building what's next ↗</span></div></div><span className="hero-sticker">Build<br/>learn<br/>repeat.</span></div>
+      <div className="portrait-stage"><Doodle className="doodle-star">✳</Doodle><Doodle className="doodle-smile">☺</Doodle><svg className="orbit" viewBox="0 0 540 540" fill="none" aria-hidden="true"><path d="M91 108C152 25 397 40 466 156c68 113-3 276-113 319C238 521 93 433 62 311 40 224 53 158 91 108Z" stroke="#315EFB" strokeWidth="1.5" strokeDasharray="5 7"/><path d="M50 370c-46 59 19 115 76 84" stroke="#ff8275" strokeWidth="2" strokeLinecap="round"/></svg><div className="portrait-blob"/><ParticlesPortrait/><div className="identity-card"><div className="identity-top"><b>Parth Pawar</b><span>He/Him</span></div><div><MapPin size={14}/> Pune, India</div><div><Mail size={14}/> parthpawarsnap11@gmail.com</div><div><BrainCircuit size={14}/> AI/ML Engineering</div><div className="identity-social"><a aria-label="LinkedIn" href="https://www.linkedin.com/in/parth-pawar/" target="_blank" rel="noreferrer"><BriefcaseBusiness size={15}/></a><a aria-label="GitHub" href="https://github.com/parthpawarsnap11-create" target="_blank" rel="noreferrer"><GitBranch size={15}/></a><span>Building what's next ↗</span></div></div><span className="hero-sticker">Build<br/>learn<br/>repeat.</span></div>
     </section>
 
     <section id="about" className="about-section page-wrap"><div className="about-title"><p className="eyebrow">A LITTLE ABOUT ME</p><h2>Curiosity is my<br/><em>starting point.</em></h2><Doodle className="about-spark">✳</Doodle></div><div className="about-content"><p className="about-intro">I like the space where technology meets real human needs. I’m learning to build intelligent systems, shaping early ideas into products, and finding the interesting questions along the way.</p><div className="trait-grid"><Reveal className="trait"><Code2/><h3>Engineer first</h3><p>From machine learning experiments to working applications, I enjoy making ideas real.</p></Reveal><Reveal className="trait" delay={.06}><BrainCircuit/><h3>Always learning</h3><p>Exploring AI, data, and the craft of building tools people actually want to use.</p></Reveal><Reveal className="trait" delay={.12}><Rocket/><h3>Builder at heart</h3><p>Co-founded a startup, led operations, and helped take an invention toward a patent.</p></Reveal></div></div></section>
