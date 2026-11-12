@@ -1,41 +1,26 @@
-# Parth Pawar — Personal Portfolio
+# Parth Pawar — Portfolio
 
-A clean, editorial-style personal portfolio built with pure **HTML5 + CSS3 + Vanilla JS** — zero frameworks, GitHub Pages compatible.
+A responsive personal portfolio built with React, Vite, Framer Motion, and Lucide icons. The page uses the existing portrait and resume, with a warm editorial palette and hand-built project illustrations.
 
-## Stack
-- **HTML5** — semantic markup
-- **CSS3** — custom properties, grid, animations
-- **Vanilla JS** — parallax, orbital SVG, scroll effects
-- **Google Fonts** — Caveat · Space Grotesk · Inter · IBM Plex Mono
+## Development
 
-## Project Structure
+```sh
+npm install
+npm run dev
 ```
-portfolio/
-├── index.html
-├── assets/
-│   ├── css/
-│   │   └── style.css
-│   ├── js/
-│   │   └── main.js
-│   └── images/
-│       └── parth-portrait.jpg
-└── README.md
+
+## Build
+
+```sh
+npm run build
 ```
+
+The production build is emitted into the repository root for the existing GitHub Pages branch deployment. Vite keeps generated JavaScript and CSS in `assets/build/`.
 
 ## Sections
-| Section | Status |
-|---------|--------|
-| Navigation | ✅ |
-| Hero | ✅ |
-| About | 🔲 stub |
-| Work | 🔲 stub |
-| Experience | 🔲 stub |
-| Skills | 🔲 stub |
-| Education | 🔲 stub |
-| Contact | 🔲 stub |
 
-## Running Locally
-Just open `index.html` in a browser — no build step needed.
-
-## Deployment
-Hosted on **GitHub Pages** via the `main` branch root.
+- Introduction and contact links
+- About and approach
+- Selected projects
+- Experience and education
+- Skills and contact
