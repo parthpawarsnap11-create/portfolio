@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useScroll } from 'framer-motion';
 import { ArrowDown, ArrowDownRight, ArrowRight, ArrowUpRight, BriefcaseBusiness, Code2, GraduationCap, Mail, MapPin, Menu, X, BrainCircuit, Rocket, GitBranch } from 'lucide-react';
 import portraitUrl from '../assets/images/parth-portrait.jpeg';
 import './style.css';
@@ -28,8 +28,23 @@ function Doodle({ className = '', children = '✳' }) { return <span aria-hidden
 
 function Header() {
   const [open, setOpen] = useState(false);
+  const [active, setActive] = useState('home');
   const links = [['About', '#about'], ['Work', '#work'], ['Experience', '#experience'], ['Skills', '#skills'], ['Contact', '#contact']];
-  return <header className="header"><a className="brand" href="#home">Parth Pawar<span>.</span></a><nav className={open ? 'nav nav-open' : 'nav'}>{links.map(([label, href]) => <a key={label} href={href} onClick={() => setOpen(false)}>{label}</a>)}<a className="nav-resume" href={resume} target="_blank" rel="noreferrer">Resume <ArrowUpRight size={14}/></a></nav><button className="menu-toggle" aria-label="Toggle menu" onClick={() => setOpen(!open)}>{open ? <X/> : <Menu/>}</button></header>;
+  useEffect(() => {
+    const sections = ['home', ...links.map(([, href]) => href.slice(1))].map(id => document.getElementById(id)).filter(Boolean);
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (visible) setActive(visible.target.id);
+    }, { rootMargin: '-22% 0px -60% 0px', threshold: [0, .1, .3, .6] });
+    sections.forEach(section => observer.observe(section));
+    return () => observer.disconnect();
+  }, []);
+  return <header className="header"><a className="brand" href="#home" onClick={() => setActive('home')}>Parth Pawar<span>.</span></a><nav className={open ? 'nav nav-open' : 'nav'} aria-label="Main navigation">{links.map(([label, href]) => <a className={active === href.slice(1) ? 'nav-active' : ''} aria-current={active === href.slice(1) ? 'location' : undefined} key={label} href={href} onClick={() => { setOpen(false); setActive(href.slice(1)); }}>{label}</a>)}<a className="nav-resume" href={resume} target="_blank" rel="noreferrer">Resume <ArrowUpRight size={14}/></a></nav><button className="menu-toggle" aria-label="Toggle menu" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? <X/> : <Menu/>}</button></header>;
+}
+
+function ScrollProgress() {
+  const { scrollYProgress } = useScroll();
+  return <motion.div className="scroll-progress" style={{ scaleX: scrollYProgress }} aria-hidden="true"/>;
 }
 
 const approachItems = [
@@ -270,7 +285,7 @@ function App() {
       document.body.style.overflow = previousOverflow;
     };
   }, [intro]);
-  return <><ScrollParticleField/><Header/><main id="home">
+  return <><ScrollProgress/><ScrollParticleField/><Header/><main id="home">
     <section className="hero page-wrap"><div className="hero-copy"><div className="edition"><span>AI / ML</span><span>ENGINEERING · PRODUCTS · RESEARCH</span></div><p className="eyebrow">ENGINEER · BUILDER · ENTREPRENEUR</p><h1><span>PARTH</span><em>PAWAR</em></h1><p className="hero-sub">I build intelligent products and turn ideas into impact. I’m an AI/ML engineering student exploring machine learning, building practical products, and experimenting with technology that solves real problems.</p><div className="hero-actions"><a className="button button-dark" href="#work">Explore my work <ArrowDownRight size={17}/></a><a className="text-link" href={resume} target="_blank" rel="noreferrer">Download resume <ArrowDown size={15}/></a></div><div className="hero-meta"><span><MapPin size={15}/> Pune, India</span><span className="availability"><i/> Open to good ideas</span></div></div>
       <div className="portrait-stage"><Doodle className="doodle-star">✳</Doodle><Doodle className="doodle-smile">☺</Doodle><svg className="orbit" viewBox="0 0 540 540" fill="none" aria-hidden="true"><path d="M91 108C152 25 397 40 466 156c68 113-3 276-113 319C238 521 93 433 62 311 40 224 53 158 91 108Z" stroke="#315EFB" strokeWidth="1.5" strokeDasharray="5 7"/><path d="M50 370c-46 59 19 115 76 84" stroke="#ff8275" strokeWidth="2" strokeLinecap="round"/></svg><div className="portrait-blob"/><ParticlesPortrait/><div className="identity-card"><div className="identity-top"><b>Parth Pawar</b><span>He/Him</span></div><div><MapPin size={14}/> Pune, India</div><div><Mail size={14}/> parthpawarsnap11@gmail.com</div><div><BrainCircuit size={14}/> AI/ML Engineering</div><div className="identity-social"><a aria-label="LinkedIn" href="https://www.linkedin.com/in/parth-pawar/" target="_blank" rel="noreferrer"><BriefcaseBusiness size={15}/></a><a aria-label="GitHub" href="https://github.com/parthpawarsnap11-create" target="_blank" rel="noreferrer"><GitBranch size={15}/></a><span>Building what's next ↗</span></div></div><span className="hero-sticker">Build<br/>learn<br/>repeat.</span></div>
     </section>
