@@ -88,14 +88,15 @@ function ParticlesPortrait() {
       sampleContext.drawImage(image, (sample.width - drawWidth) / 2, (sample.height - drawHeight) * .5, drawWidth, drawHeight);
       const pixels = sampleContext.getImageData(0, 0, sample.width, sample.height).data;
       particles = [];
-      const gap = width < 500 ? 7 : 6;
-      for (let y = 2; y < sample.height; y += gap) {
-        for (let x = 2; x < sample.width; x += gap) {
+      // Sample the portrait at a finer grid and retain its original colors.
+      // The reference uses the same idea: the photo itself becomes the particle field.
+      const gap = width < 500 ? 5 : 4;
+      for (let y = Math.floor(gap / 2); y < sample.height; y += gap) {
+        for (let x = Math.floor(gap / 2); x < sample.width; x += gap) {
           const index = (y * sample.width + x) * 4;
           const r = pixels[index], g = pixels[index + 1], b = pixels[index + 2];
-          const luminance = (r * .299 + g * .587 + b * .114) / 255;
-          const color = luminance < .18 ? '#10264f' : luminance < .32 ? '#183b65' : luminance < .48 ? '#f04b23' : luminance < .64 ? '#ff7043' : luminance < .80 ? '#e5a26e' : '#f5e99b';
-          particles.push({ x, y, ox: x, oy: y, vx: 0, vy: 0, color, size: width < 500 ? 4.1 + Math.random() * .8 : 4.2 + Math.random() * .8 });
+          const color = `rgb(${r}, ${g}, ${b})`;
+          particles.push({ x, y, ox: x, oy: y, vx: 0, vy: 0, color, size: gap * (.78 + Math.random() * .14) });
         }
       }
       frame.classList.add('particle-ready');
