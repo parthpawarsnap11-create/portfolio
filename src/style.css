@@ -92,6 +92,7 @@ main#home{padding-top:80px}
 .menu-toggle:focus-visible,.nav a:focus-visible,.brand:focus-visible{outline:2px solid #f04b23;outline-offset:4px;border-radius:8px}
 @media(max-width:620px){.header{top:9px;width:calc(100% - 24px);height:58px;padding:0 12px 0 18px}.nav{top:64px;left:0;right:0;border-radius:20px;padding:12px 18px;background:rgba(248,235,207,.98)}main#home{padding-top:69px}.nav a:not(.nav-resume):after{bottom:5px}.nav-resume{margin-top:7px;text-align:center;justify-content:center}.scroll-progress{height:2px}}
 @media(prefers-reduced-motion:reduce){.nav a:after{transition:none}}
+.particle-hint{display:none!important}
 
 /* Give the portrait the visual weight of the hero and keep the photo unobstructed. */
 .identity-card{display:none!important}
