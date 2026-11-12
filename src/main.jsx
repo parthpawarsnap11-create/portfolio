@@ -7,13 +7,18 @@ import './style.css';
 
 const resume = '/portfolio/ParthPawar-Resume.pdf.pdf';
 const projects = [
-  { name: 'EEG Data Analysis', type: 'Machine Learning', tone: 'lavender', desc: 'A complete hierarchical clustering pipeline built from scratch to uncover patterns in EEG brainwave data.', tags: ['Python', 'NumPy', 'Clustering'], art: 'eeg' },
-  { name: 'CampusFix', type: 'Product · UX Research', tone: 'rose', desc: 'A thoughtful hostel complaint experience, shaped through interviews, journey mapping, and usability testing.', tags: ['Streamlit', 'Research', 'Product'], art: 'campus' },
-  { name: 'TOTP Authenticator', type: 'Security', tone: 'lime', desc: 'A command line authenticator implementing time based one time passwords using the RFC 6238 standard.', tags: ['Python', 'TOTP', 'Security'], art: 'auth', href: 'https://github.com/parthpawarsnap11-create' },
-  { name: 'LibraIQ', type: 'Predictive Analytics', tone: 'blue', desc: 'A machine learning tool that predicts future library book demand from borrowing patterns.', tags: ['Scikit-learn', 'Data', 'Streamlit'], art: 'chart', href: 'https://github.com/parthpawarsnap11-create/library-book-demand-prediction' },
-  { name: 'AdvanceMask', type: 'Innovation · Patent filed', tone: 'peach', desc: 'A protective mask concept engineered from initial idea through design and patent filing.', tags: ['Invention', 'Engineering', 'Design'], art: 'mask' },
+  { name: 'EEG Data Analysis', type: 'Machine learning · Research', tone: 'lavender', desc: 'Agglomerative hierarchical clustering implemented from scratch on the Bangalore EEG Epilepsy Dataset, with a decision-tree surrogate for explaining cluster assignments.', note: '96–97% reported surrogate accuracy: agreement with the project’s cluster labels, not clinical diagnostic accuracy.', tags: ['Python', 'NumPy', 'Clustering'], art: 'eeg', href: 'https://github.com/parthpawarsnap11-create' },
+  { name: 'CampusFix', type: 'HCI · UX research', tone: 'rose', desc: 'An HCI project around hostel complaints, focused on understanding the student problem, making sense of research, and designing the information architecture.', tags: ['HCI research', 'Information architecture', 'UX'], art: 'campus', href: 'https://github.com/parthpawarsnap11-create/CampusFix', direct: true },
+  { name: 'TOTP Authenticator', type: 'Security · Python', tone: 'lime', desc: 'A command-line project exploring time-based one-time password generation with RFC 6238, inspired by familiar 2FA apps.', tags: ['Python', 'TOTP', 'RFC 6238'], art: 'auth', href: 'https://github.com/parthpawarsnap11-create' },
+  { name: 'LibraIQ', type: 'Machine learning · Streamlit', tone: 'blue', desc: 'A demand classifier for university library books. Compares models and presents High, Medium, or Low predictions in an interactive dashboard.', tags: ['Scikit-learn', 'Pandas', 'Streamlit'], art: 'chart', href: 'https://github.com/parthpawarsnap11-create/library-book-demand-prediction', direct: true },
+  { name: 'AdvanceMask', type: 'Engineering · Innovation', tone: 'peach', desc: 'A protective equipment concept taken through product design and engineering, with a patent filed.', tags: ['Product design', 'Engineering', 'Innovation'], art: 'mask', href: 'https://github.com/parthpawarsnap11-create' },
 ];
-const skills = ['Python', 'Pandas', 'NumPy', 'Scikit-learn', 'Machine Learning', 'Data Analysis', 'Streamlit', 'Git & GitHub', 'User Research', 'Product Thinking', 'Usability Testing', 'Jupyter'];
+const skillGroups = [
+  { name: 'Programming & data', note: 'Working with information', skills: ['Python', 'Pandas', 'NumPy', 'Data analysis'] },
+  { name: 'Machine learning', note: 'Modeling and evaluation', skills: ['Scikit-learn', 'Classification', 'Clustering', 'Model evaluation', 'Predictive analytics'] },
+  { name: 'Development', note: 'Building and sharing', skills: ['Streamlit', 'Git', 'GitHub', 'Jupyter Notebook'] },
+  { name: 'Product & UX', note: 'Learning from people', skills: ['User research', 'Information architecture', 'Usability testing', 'Product research'] },
+];
 const variants = { hidden: { opacity: 0, y: 22 }, visible: { opacity: 1, y: 0, transition: { duration: .62, ease: [.22, 1, .36, 1] } } };
 
 function Reveal({ children, className = '', delay = 0 }) {
@@ -38,12 +43,14 @@ function ParticlesPortrait() {
     const context = canvas.getContext('2d', { alpha: true });
     const sample = document.createElement('canvas');
     const sampleContext = sample.getContext('2d', { willReadFrequently: true });
+    if (!context || !sampleContext) return;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     let particles = [];
     let width = 0;
     let height = 0;
     let frameId;
     let active = false;
+    let pointerMoved = false;
     const pointer = { x: -1000, y: -1000 };
 
     const resize = () => {
@@ -60,22 +67,24 @@ function ParticlesPortrait() {
       sample.width = Math.max(1, Math.round(width));
       sample.height = Math.max(1, Math.round(height));
       sampleContext.clearRect(0, 0, sample.width, sample.height);
-      const scale = Math.max(sample.width / image.naturalWidth, sample.height / image.naturalHeight);
+      const scale = Math.min(sample.width / image.naturalWidth, sample.height / image.naturalHeight);
       const drawWidth = image.naturalWidth * scale;
       const drawHeight = image.naturalHeight * scale;
       sampleContext.drawImage(image, (sample.width - drawWidth) / 2, (sample.height - drawHeight) * .35, drawWidth, drawHeight);
       const pixels = sampleContext.getImageData(0, 0, sample.width, sample.height).data;
       particles = [];
-      const gap = width < 500 ? 6 : 7;
+      const gap = width < 500 ? 7 : width < 900 ? 6 : 5;
       for (let y = 2; y < sample.height; y += gap) {
         for (let x = 2; x < sample.width; x += gap) {
           const index = (y * sample.width + x) * 4;
           const r = pixels[index], g = pixels[index + 1], b = pixels[index + 2];
           const luminance = (r * .299 + g * .587 + b * .114) / 255;
-          const color = luminance < .26 ? '#17345f' : luminance > .76 ? '#f4dfb2' : '#ef542b';
-          particles.push({ x, y, ox: x, oy: y, vx: 0, vy: 0, color, size: 2.1 + Math.random() * 1.6 });
+          const color = luminance < .18 ? '#10264f' : luminance < .32 ? '#183b65' : luminance < .48 ? '#f04b23' : luminance < .64 ? '#ff7043' : luminance < .80 ? '#e5a26e' : '#f5e99b';
+          particles.push({ x, y, ox: x, oy: y, vx: 0, vy: 0, color, size: width < 500 ? 3 + Math.random() : 3.1 + Math.random() });
         }
       }
+      frame.classList.add('particle-ready');
+      schedule();
     };
     const draw = () => {
       frameId = undefined;
@@ -83,7 +92,7 @@ function ParticlesPortrait() {
       const radius = 94;
       let moving = false;
       for (const particle of particles) {
-        if (active && !reduceMotion.matches) {
+        if (active && pointerMoved && !reduceMotion.matches) {
           const dx = particle.x - pointer.x;
           const dy = particle.y - pointer.y;
           const distance = Math.hypot(dx, dy);
@@ -101,16 +110,19 @@ function ParticlesPortrait() {
         particle.y += particle.vy;
         if (Math.abs(particle.vx) > .08 || Math.abs(particle.vy) > .08 || Math.abs(particle.x - particle.ox) > .15 || Math.abs(particle.y - particle.oy) > .15) moving = true;
         context.fillStyle = particle.color;
-        context.globalAlpha = active ? .94 : 0;
+        context.globalAlpha = .92;
         context.fillRect(particle.x, particle.y, particle.size, particle.size);
       }
+      pointerMoved = false;
       context.globalAlpha = 1;
-      if ((active && !reduceMotion.matches) || moving) frameId = requestAnimationFrame(draw);
+      if (moving) frameId = requestAnimationFrame(draw);
     };
     const schedule = () => { if (frameId === undefined) frameId = requestAnimationFrame(draw); };
     const onMove = event => {
       const rect = frame.getBoundingClientRect();
+      if (event.pointerType === 'touch') return;
       active = true;
+      pointerMoved = true;
       pointer.x = event.clientX - rect.left;
       pointer.y = event.clientY - rect.top;
       schedule();
@@ -131,7 +143,7 @@ function ParticlesPortrait() {
       frame.removeEventListener('pointerleave', onLeave);
     };
   }, []);
-  return <div className="portrait-frame" ref={frameRef}><img ref={imageRef} src={portraitUrl} alt="Portrait of Parth Pawar"/><canvas className="portrait-particles" ref={canvasRef} aria-hidden="true"/></div>;
+  return <div className="portrait-frame" ref={frameRef}><img ref={imageRef} src={portraitUrl} alt="Portrait of Parth Pawar"/><canvas className="portrait-particles" ref={canvasRef} aria-hidden="true"/><span className="particle-hint">MOVE TO DISTURB THE FIELD ↗</span></div>;
 }
 
 function ProjectArt({ kind }) {
@@ -143,24 +155,24 @@ function ProjectArt({ kind }) {
 }
 
 function ProjectCard({ project, index }) {
-  return <Reveal className={`project-card ${project.tone}`} delay={index * .07}><div className={`project-art ${project.art}`}><ProjectArt kind={project.art}/><span className="project-index">0{index + 1}</span></div><div className="project-copy"><div className="project-type">{project.type}</div><h3>{project.name}</h3><p>{project.desc}</p><div className="tag-list">{project.tags.map(tag => <span key={tag}>{tag}</span>)}</div><a className="project-link" href={project.href || 'mailto:parthpawarsnap11@gmail.com?subject=' + encodeURIComponent(project.name)} target={project.href ? '_blank' : undefined} rel="noreferrer">Explore project <ArrowUpRight size={15}/></a></div></Reveal>;
+  return <Reveal className={`project-card ${project.tone}`} delay={index * .07}><div className={`project-art ${project.art}`}><ProjectArt kind={project.art}/><span className="project-index">0{index + 1}</span></div><div className="project-copy"><div className="project-type">{project.type}</div><h3>{project.name}</h3><p>{project.desc}</p>{project.note && <p className="project-note">{project.note}</p>}<div className="tag-list">{project.tags.map(tag => <span key={tag}>{tag}</span>)}</div><a className="project-link" href={project.href} target="_blank" rel="noreferrer">{project.direct ? 'Open repository' : 'Browse GitHub'} <ArrowUpRight size={15}/></a></div></Reveal>;
 }
 
 function App() {
   return <><Header/><main id="home">
-    <section className="hero page-wrap"><div className="hero-copy"><div className="edition"><span>AI / ML</span><span>Engineer in progress</span></div><p className="eyebrow">CURIOUS MIND. BUILDER'S HANDS.</p><h1>Ideas into<br/><em>impact.</em></h1><p className="hero-sub">Hey, I’m Parth — an AI/ML engineering student who loves building useful things and figuring out how they can make a difference.</p><div className="hero-actions"><a className="button button-dark" href="#work">Explore my work <ArrowDownRight size={17}/></a><a className="text-link" href={resume} target="_blank" rel="noreferrer">Download resume <ArrowDown size={15}/></a></div><div className="hero-meta"><span><MapPin size={15}/> Pune, India</span><span className="availability"><i/> Open to good ideas</span></div></div>
+    <section className="hero page-wrap"><div className="hero-copy"><div className="edition"><span>AI / ML</span><span>ENGINEERING · PRODUCTS · RESEARCH</span></div><p className="eyebrow">ENGINEER · BUILDER · ENTREPRENEUR</p><h1><span>PARTH</span><em>PAWAR</em></h1><p className="hero-sub">I build intelligent products and turn ideas into impact. I’m an AI/ML engineering student exploring machine learning, building practical products, and experimenting with technology that solves real problems.</p><div className="hero-actions"><a className="button button-dark" href="#work">Explore my work <ArrowDownRight size={17}/></a><a className="text-link" href={resume} target="_blank" rel="noreferrer">Download resume <ArrowDown size={15}/></a></div><div className="hero-meta"><span><MapPin size={15}/> Pune, India</span><span className="availability"><i/> Open to good ideas</span></div></div>
       <div className="portrait-stage"><Doodle className="doodle-star">✳</Doodle><Doodle className="doodle-smile">☺</Doodle><svg className="orbit" viewBox="0 0 540 540" fill="none" aria-hidden="true"><path d="M91 108C152 25 397 40 466 156c68 113-3 276-113 319C238 521 93 433 62 311 40 224 53 158 91 108Z" stroke="#315EFB" strokeWidth="1.5" strokeDasharray="5 7"/><path d="M50 370c-46 59 19 115 76 84" stroke="#ff8275" strokeWidth="2" strokeLinecap="round"/></svg><div className="portrait-blob"/><ParticlesPortrait/><div className="identity-card"><div className="identity-top"><b>Parth Pawar</b><span>He/Him</span></div><div><MapPin size={14}/> Pune, India</div><div><Mail size={14}/> parthpawarsnap11@gmail.com</div><div><BrainCircuit size={14}/> AI/ML Engineering</div><div className="identity-social"><a aria-label="LinkedIn" href="https://www.linkedin.com/in/parth-pawar/" target="_blank" rel="noreferrer"><BriefcaseBusiness size={15}/></a><a aria-label="GitHub" href="https://github.com/parthpawarsnap11-create" target="_blank" rel="noreferrer"><GitBranch size={15}/></a><span>Building what's next ↗</span></div></div><span className="hero-sticker">Build<br/>learn<br/>repeat.</span></div>
     </section>
 
-    <section id="about" className="about-section page-wrap"><div className="about-title"><p className="eyebrow">A LITTLE ABOUT ME</p><h2>Curiosity is my<br/><em>starting point.</em></h2><Doodle className="about-spark">✳</Doodle></div><div className="about-content"><p className="about-intro">I like the space where technology meets real human needs. I’m learning to build intelligent systems, shaping early ideas into products, and finding the interesting questions along the way.</p><div className="trait-grid"><Reveal className="trait"><Code2/><h3>Engineer first</h3><p>From machine learning experiments to working applications, I enjoy making ideas real.</p></Reveal><Reveal className="trait" delay={.06}><BrainCircuit/><h3>Always learning</h3><p>Exploring AI, data, and the craft of building tools people actually want to use.</p></Reveal><Reveal className="trait" delay={.12}><Rocket/><h3>Builder at heart</h3><p>Co-founded a startup, led operations, and helped take an invention toward a patent.</p></Reveal></div></div></section>
+    <section id="about" className="about-section page-wrap"><div className="about-title"><p className="eyebrow">MY APPROACH</p><h2>Good work starts<br/>with <em>good questions.</em></h2><Doodle className="about-spark">✳</Doodle></div><div className="about-content"><p className="about-intro">I like understanding the problem before reaching for a tool. Then I build, test, learn from what breaks, and keep improving.</p><div className="trait-grid"><Reveal className="trait"><span className="principle-number">01</span><h3>Understand the problem</h3><p>Research the real need before choosing a technical solution.</p></Reveal><Reveal className="trait" delay={.06}><span className="principle-number">02</span><h3>Build and experiment</h3><p>Turn ideas into prototypes, test assumptions, and learn through implementation.</p></Reveal><Reveal className="trait" delay={.12}><span className="principle-number">03</span><h3>Learn and iterate</h3><p>Evaluate the result, understand the misses, and make the next version better.</p></Reveal></div></div></section>
 
-    <section id="work" className="work-section page-wrap"><div className="section-heading"><div><p className="eyebrow">THINGS I’VE BEEN MAKING</p><h2>Selected <em>work.</em></h2></div><p className="section-note">A mix of machine learning,<br/>product thinking, and curiosity.<Doodle>〰</Doodle></p></div><div className="project-grid">{projects.map((project, index) => <ProjectCard key={project.name} project={project} index={index}/>)}</div><a className="button button-dark github-button" href="https://github.com/parthpawarsnap11-create" target="_blank" rel="noreferrer">More on GitHub <GitBranch size={16}/></a></section>
+    <section id="work" className="work-section page-wrap"><div className="section-heading"><div><p className="eyebrow">SELECTED PROJECTS</p><h2>Systems I <em>built.</em></h2></div><p className="section-note">Five projects across data,<br/>security, product, and UX.<Doodle>〰</Doodle></p></div><div className="project-grid">{projects.map((project, index) => <ProjectCard key={project.name} project={project} index={index}/>)}</div><div className="also-built"><div><p className="eyebrow">ALSO BUILT</p><h3>Ideas that taught me something.</h3></div><p>From mapping a student complaint journey to prototyping a time-based authenticator and modeling demand, each project starts with a question worth exploring.</p><a className="text-link" href="https://github.com/parthpawarsnap11-create" target="_blank" rel="noreferrer">Browse my GitHub <ArrowUpRight size={15}/></a></div></section>
 
-    <section className="journey-section page-wrap" id="experience"><div className="journey-card experience-card"><p className="eyebrow">THE JOURNEY SO FAR</p><h2>Experience</h2><div className="timeline"><article><span className="timeline-dot lime-dot"/><div><small>2023 — PRESENT</small><h3>Co-Founder &amp; CMO</h3><p>FundNexus Pvt. Ltd.</p><span>Brand strategy, go-to-market planning, and marketing operations.</span></div></article><article><span className="timeline-dot pink-dot"/><div><small>2022 — 2023</small><h3>Head of Operations</h3><p>D2C Brand</p><span>Supply chain coordination, process design, and operations.</span></div></article><article><span className="timeline-dot blue-dot"/><div><small>2021 — INTERNSHIP</small><h3>Inventor &amp; Innovation Lead</h3><p>AdvanceMask</p><span>Developed a protective mask concept through to patent filing.</span></div></article></div><BriefcaseBusiness className="journey-icon"/></div><div className="journey-card education-card"><p className="eyebrow">IN THE CLASSROOM</p><h2>Education</h2><div className="edu-mark"><GraduationCap size={46}/></div><small>2022 — 2026</small><h3>B.Tech, Artificial Intelligence &amp; Machine Learning</h3><p>Vijaybhoomi University<br/>Pune, India</p><div className="edu-line"/><span>Machine learning · Data science · Product development</span></div></section>
+    <section className="journey-section page-wrap" id="experience"><div className="journey-intro"><p className="eyebrow">EXPERIENCE</p><h2>Where I’ve<br/><em>been.</em></h2><p>A few different roles, one common thread: understanding what needs to work, then helping make it work.</p></div><div className="experience-list"><article><span className="timeline-dot lime-dot"/><div><p className="eyebrow">FUNDNEXUS PVT. LTD.</p><h3>Co-Founder &amp; CMO</h3><p>Co-founded a startup and led brand strategy, go-to-market planning, and marketing operations.</p></div></article><article><span className="timeline-dot pink-dot"/><div><p className="eyebrow">D2C OPERATIONS</p><h3>Head of Operations</h3><p>Led supply chain coordination, process design, and day-to-day operating systems.</p></div></article><article><span className="timeline-dot blue-dot"/><div><p className="eyebrow">ADVANCEMASK</p><h3>Inventor &amp; Innovation Lead</h3><p>Developed a protective equipment concept through engineering and patent filing.</p></div></article><article className="education-entry"><span className="timeline-dot orange-dot"/><div><p className="eyebrow">VIJAYBHOOMI UNIVERSITY</p><h3>B.Tech · Artificial Intelligence &amp; Machine Learning</h3><p>Pune, India</p></div></article></div></section>
 
-    <section className="skills-section page-wrap" id="skills"><div className="skills-copy"><p className="eyebrow">MY TOOLKIT</p><h2>Things I’m<br/><em>learning by doing.</em></h2><p>My toolkit keeps growing. These are a few tools and ideas I’ve been spending time with.</p><a className="text-link" href="https://github.com/parthpawarsnap11-create" target="_blank" rel="noreferrer">See what I’m building <ArrowRight size={15}/></a></div><div className="skills-cloud">{skills.map((skill, i) => <span key={skill} className={`skill-pill pill-${i % 5}`}>{skill}</span>)}<Doodle className="skills-star">✳</Doodle></div></section>
+    <section className="skills-section page-wrap" id="skills"><div className="skills-copy"><p className="eyebrow">MY TECHNICAL STACK</p><h2>Tools for<br/><em>making things.</em></h2><p>Skills grow through practice. Here’s what I’ve been learning and applying across projects.</p><a className="text-link" href="https://github.com/parthpawarsnap11-create" target="_blank" rel="noreferrer">See what I’m building <ArrowRight size={15}/></a></div><div className="skills-groups">{skillGroups.map((group, i) => <article className="stack-row" key={group.name}><div className="stack-label"><span>L{i + 1}</span><h3>{group.name}</h3><p>{group.note}</p></div><div className="tag-list">{group.skills.map(skill => <span key={skill}>{skill}</span>)}</div></article>)}</div></section>
 
-    <section id="contact" className="contact-section page-wrap"><div className="contact-doodle">✳</div><div className="contact-inner"><div><p className="eyebrow">HAVE A GOOD ONE IN MIND?</p><h2>Let’s build something<br/><em>worth building.</em></h2><p>I’m always up for thoughtful projects, new ideas, and conversations about what’s next.</p></div><a className="button button-blue" href="mailto:parthpawarsnap11@gmail.com">Get in touch <ArrowUpRight size={17}/></a></div><div className="contact-bottom"><span>Pune, India · Usually online</span><div><a href="mailto:parthpawarsnap11@gmail.com" aria-label="Email"><Mail/></a><a href="https://www.linkedin.com/in/parth-pawar/" aria-label="LinkedIn" target="_blank" rel="noreferrer"><BriefcaseBusiness/></a><a href="https://github.com/parthpawarsnap11-create" aria-label="GitHub" target="_blank" rel="noreferrer"><Code2/></a></div><span>© 2026 Parth Pawar</span></div></section>
+    <section id="contact" className="contact-section page-wrap"><div className="contact-doodle">✳</div><div className="contact-inner"><div><p className="eyebrow">HAVE A GOOD ONE IN MIND?</p><h2>Let’s build something<br/><em>meaningful.</em></h2><p>I’m always up for thoughtful projects, new ideas, and conversations about what’s next.</p></div><a className="button button-blue" href="mailto:parthpawarsnap11@gmail.com">Get in touch <ArrowUpRight size={17}/></a></div><div className="contact-bottom"><span>Pune, India · Usually online</span><div><a href="mailto:parthpawarsnap11@gmail.com" aria-label="Email"><Mail/></a><a href="https://www.linkedin.com/in/parth-pawar/" aria-label="LinkedIn" target="_blank" rel="noreferrer"><BriefcaseBusiness/></a><a href="https://github.com/parthpawarsnap11-create" aria-label="GitHub" target="_blank" rel="noreferrer"><Code2/></a></div><span>© 2026 Parth Pawar</span></div></section>
   </main></>;
 }
 
