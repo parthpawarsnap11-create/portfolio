@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDown, ArrowDownRight, ArrowRight, ArrowUpRight, BriefcaseBusiness, Code2, GraduationCap, Mail, MapPin, Menu, X, BrainCircuit, Rocket, GitBranch } from 'lucide-react';
 import portraitUrl from '../assets/images/parth-portrait.jpeg';
 import './style.css';
@@ -30,6 +30,21 @@ function Header() {
   const [open, setOpen] = useState(false);
   const links = [['About', '#about'], ['Work', '#work'], ['Experience', '#experience'], ['Skills', '#skills'], ['Contact', '#contact']];
   return <header className="header"><a className="brand" href="#home">Parth Pawar<span>.</span></a><nav className={open ? 'nav nav-open' : 'nav'}>{links.map(([label, href]) => <a key={label} href={href} onClick={() => setOpen(false)}>{label}</a>)}<a className="nav-resume" href={resume} target="_blank" rel="noreferrer">Resume <ArrowUpRight size={14}/></a></nav><button className="menu-toggle" aria-label="Toggle menu" onClick={() => setOpen(!open)}>{open ? <X/> : <Menu/>}</button></header>;
+}
+
+const approachItems = [
+  { title: 'Understand the problem', line: 'Research the real need before choosing a solution.', detail: 'Start with the people and the context. A clear problem makes the technical decisions that follow more useful.', tone: 'orange' },
+  { title: 'Build and experiment', line: 'Turn ideas into prototypes and test assumptions.', detail: 'Make the idea tangible, try it in code, and learn from what happens when it meets real constraints.', tone: 'navy' },
+  { title: 'Learn and iterate', line: 'Evaluate the result, then make the next version better.', detail: 'Look closely at what worked and what did not. Use those lessons to improve the product and the process.', tone: 'yellow' },
+];
+
+function ApproachSection() {
+  const [active, setActive] = useState(0);
+  return <section id="about" className="approach-section page-wrap"><div className="approach-heading"><p className="eyebrow">MY APPROACH</p><h2>Good work starts<br/>with <em>good questions.</em></h2><p>I like understanding the problem before reaching for a tool. Then I build, test, learn from what breaks, and keep improving.</p></div><div className="approach-list" aria-label="Engineering principles">{approachItems.map((item, index) => <motion.button key={item.title} layout type="button" className={`approach-row ${active === index ? `is-active tone-${item.tone}` : ''}`} onClick={() => setActive(index)} aria-pressed={active === index}><span className="approach-number">0{index + 1}</span><span className="approach-title"><strong>{item.title}</strong><small>{item.line}</small></span><motion.span className="approach-detail" initial={false} animate={{ opacity: active === index ? 1 : .55, x: active === index ? 0 : 8 }}>{item.detail}</motion.span><ArrowUpRight className="approach-arrow" size={19}/></motion.button>)}</div></section>;
+}
+
+function PortfolioIntro() {
+  return <motion.div className="portfolio-intro" initial={{ clipPath: 'inset(0 0 0 0)' }} exit={{ clipPath: 'inset(0 0 100% 0)' }} transition={{ duration: .64, ease: [.76, 0, .24, 1] }} aria-label="Opening Parth Pawar portfolio"><div className="intro-mark">PP<span>.</span></div><div className="intro-lockup"><span>PARTH</span><span>PAWAR</span></div><p>ENGINEER · BUILDER · ENTREPRENEUR</p><div className="intro-progress"><motion.span initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 1.24, ease: [.7, 0, .3, 1] }}/></div><span className="intro-caption">A PORTFOLIO IN MOTION <b>01 / 01</b></span></motion.div>;
 }
 
 function ParticlesPortrait() {
@@ -159,12 +174,23 @@ function ProjectCard({ project, index }) {
 }
 
 function App() {
+  const [intro, setIntro] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  useEffect(() => {
+    if (!intro) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const timer = window.setTimeout(() => setIntro(false), 1420);
+    return () => {
+      window.clearTimeout(timer);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [intro]);
   return <><Header/><main id="home">
     <section className="hero page-wrap"><div className="hero-copy"><div className="edition"><span>AI / ML</span><span>ENGINEERING · PRODUCTS · RESEARCH</span></div><p className="eyebrow">ENGINEER · BUILDER · ENTREPRENEUR</p><h1><span>PARTH</span><em>PAWAR</em></h1><p className="hero-sub">I build intelligent products and turn ideas into impact. I’m an AI/ML engineering student exploring machine learning, building practical products, and experimenting with technology that solves real problems.</p><div className="hero-actions"><a className="button button-dark" href="#work">Explore my work <ArrowDownRight size={17}/></a><a className="text-link" href={resume} target="_blank" rel="noreferrer">Download resume <ArrowDown size={15}/></a></div><div className="hero-meta"><span><MapPin size={15}/> Pune, India</span><span className="availability"><i/> Open to good ideas</span></div></div>
       <div className="portrait-stage"><Doodle className="doodle-star">✳</Doodle><Doodle className="doodle-smile">☺</Doodle><svg className="orbit" viewBox="0 0 540 540" fill="none" aria-hidden="true"><path d="M91 108C152 25 397 40 466 156c68 113-3 276-113 319C238 521 93 433 62 311 40 224 53 158 91 108Z" stroke="#315EFB" strokeWidth="1.5" strokeDasharray="5 7"/><path d="M50 370c-46 59 19 115 76 84" stroke="#ff8275" strokeWidth="2" strokeLinecap="round"/></svg><div className="portrait-blob"/><ParticlesPortrait/><div className="identity-card"><div className="identity-top"><b>Parth Pawar</b><span>He/Him</span></div><div><MapPin size={14}/> Pune, India</div><div><Mail size={14}/> parthpawarsnap11@gmail.com</div><div><BrainCircuit size={14}/> AI/ML Engineering</div><div className="identity-social"><a aria-label="LinkedIn" href="https://www.linkedin.com/in/parth-pawar/" target="_blank" rel="noreferrer"><BriefcaseBusiness size={15}/></a><a aria-label="GitHub" href="https://github.com/parthpawarsnap11-create" target="_blank" rel="noreferrer"><GitBranch size={15}/></a><span>Building what's next ↗</span></div></div><span className="hero-sticker">Build<br/>learn<br/>repeat.</span></div>
     </section>
 
-    <section id="about" className="about-section page-wrap"><div className="about-title"><p className="eyebrow">MY APPROACH</p><h2>Good work starts<br/>with <em>good questions.</em></h2><Doodle className="about-spark">✳</Doodle></div><div className="about-content"><p className="about-intro">I like understanding the problem before reaching for a tool. Then I build, test, learn from what breaks, and keep improving.</p><div className="trait-grid"><Reveal className="trait"><span className="principle-number">01</span><h3>Understand the problem</h3><p>Research the real need before choosing a technical solution.</p></Reveal><Reveal className="trait" delay={.06}><span className="principle-number">02</span><h3>Build and experiment</h3><p>Turn ideas into prototypes, test assumptions, and learn through implementation.</p></Reveal><Reveal className="trait" delay={.12}><span className="principle-number">03</span><h3>Learn and iterate</h3><p>Evaluate the result, understand the misses, and make the next version better.</p></Reveal></div></div></section>
+    <ApproachSection/>
 
     <section id="work" className="work-section page-wrap"><div className="section-heading"><div><p className="eyebrow">SELECTED PROJECTS</p><h2>Systems I <em>built.</em></h2></div><p className="section-note">Five projects across data,<br/>security, product, and UX.<Doodle>〰</Doodle></p></div><div className="project-grid">{projects.map((project, index) => <ProjectCard key={project.name} project={project} index={index}/>)}</div><div className="also-built"><div><p className="eyebrow">ALSO BUILT</p><h3>Ideas that taught me something.</h3></div><p>From mapping a student complaint journey to prototyping a time-based authenticator and modeling demand, each project starts with a question worth exploring.</p><a className="text-link" href="https://github.com/parthpawarsnap11-create" target="_blank" rel="noreferrer">Browse my GitHub <ArrowUpRight size={15}/></a></div></section>
 
@@ -173,7 +199,7 @@ function App() {
     <section className="skills-section page-wrap" id="skills"><div className="skills-copy"><p className="eyebrow">MY TECHNICAL STACK</p><h2>Tools for<br/><em>making things.</em></h2><p>Skills grow through practice. Here’s what I’ve been learning and applying across projects.</p><a className="text-link" href="https://github.com/parthpawarsnap11-create" target="_blank" rel="noreferrer">See what I’m building <ArrowRight size={15}/></a></div><div className="skills-groups">{skillGroups.map((group, i) => <article className="stack-row" key={group.name}><div className="stack-label"><span>L{i + 1}</span><h3>{group.name}</h3><p>{group.note}</p></div><div className="tag-list">{group.skills.map(skill => <span key={skill}>{skill}</span>)}</div></article>)}</div></section>
 
     <section id="contact" className="contact-section page-wrap"><div className="contact-doodle">✳</div><div className="contact-inner"><div><p className="eyebrow">HAVE A GOOD ONE IN MIND?</p><h2>Let’s build something<br/><em>meaningful.</em></h2><p>I’m always up for thoughtful projects, new ideas, and conversations about what’s next.</p></div><a className="button button-blue" href="mailto:parthpawarsnap11@gmail.com">Get in touch <ArrowUpRight size={17}/></a></div><div className="contact-bottom"><span>Pune, India · Usually online</span><div><a href="mailto:parthpawarsnap11@gmail.com" aria-label="Email"><Mail/></a><a href="https://www.linkedin.com/in/parth-pawar/" aria-label="LinkedIn" target="_blank" rel="noreferrer"><BriefcaseBusiness/></a><a href="https://github.com/parthpawarsnap11-create" aria-label="GitHub" target="_blank" rel="noreferrer"><Code2/></a></div><span>© 2026 Parth Pawar</span></div></section>
-  </main></>;
+  </main><AnimatePresence>{intro && <PortfolioIntro key="portfolio-intro"/>}</AnimatePresence></>;
 }
 
 createRoot(document.getElementById('root')).render(<React.StrictMode><App/></React.StrictMode>);
