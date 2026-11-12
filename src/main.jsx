@@ -174,7 +174,7 @@ function ParticlesPortrait() {
       frame.removeEventListener('pointerleave', onLeave);
     };
   }, []);
-  return <div className="portrait-frame" ref={frameRef}><img ref={imageRef} src={portraitUrl} alt="Portrait of Parth Pawar"/><canvas className="portrait-particles" ref={canvasRef} aria-hidden="true"/><span className="particle-hint">MOVE TO DISTURB THE FIELD ↗</span></div>;
+  return <div className="portrait-frame" ref={frameRef}><img ref={imageRef} src={portraitUrl} alt="Portrait of Parth Pawar"/><canvas className="portrait-particles" ref={canvasRef} aria-hidden="true"/></div>;
 }
 
 function ScrollParticleField() {
