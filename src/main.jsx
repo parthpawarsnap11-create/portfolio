@@ -40,7 +40,7 @@ const approachItems = [
 
 function ApproachSection() {
   const [active, setActive] = useState(0);
-  return <section id="about" className="approach-section page-wrap"><div className="approach-heading"><p className="eyebrow">MY APPROACH</p><h2>Good work starts<br/>with <em>good questions.</em></h2><p>I like understanding the problem before reaching for a tool. Then I build, test, learn from what breaks, and keep improving.</p></div><div className="approach-list" aria-label="Engineering principles">{approachItems.map((item, index) => <motion.button key={item.title} layout type="button" className={`approach-row ${active === index ? `is-active tone-${item.tone}` : ''}`} onClick={() => setActive(index)} aria-pressed={active === index}><span className="approach-number">0{index + 1}</span><span className="approach-title"><strong>{item.title}</strong><small>{item.line}</small></span><motion.span className="approach-detail" initial={false} animate={{ opacity: active === index ? 1 : .55, x: active === index ? 0 : 8 }}>{item.detail}</motion.span><ArrowUpRight className="approach-arrow" size={19}/></motion.button>)}</div></section>;
+  return <section id="about" className="approach-section page-wrap"><div className="approach-heading"><p className="eyebrow">MY APPROACH</p><h2>Good work starts<br/>with <em>good questions.</em></h2><p>I like understanding the problem before reaching for a tool. Then I build, test, learn from what breaks, and keep improving.</p></div><div className="approach-list" aria-label="Engineering principles">{approachItems.map((item, index) => <motion.button key={item.title} layout type="button" className={`approach-row ${active === index ? `is-active tone-${item.tone}` : ''}`} onPointerEnter={event => { if (event.pointerType === 'mouse' || event.pointerType === 'pen') setActive(index); }} onFocus={() => setActive(index)} onClick={() => setActive(index)} aria-pressed={active === index}><span className="approach-number">0{index + 1}</span><span className="approach-title"><strong>{item.title}</strong><small>{item.line}</small></span><motion.span className="approach-detail" initial={false} animate={{ opacity: active === index ? 1 : .55, x: active === index ? 0 : 8 }}>{item.detail}</motion.span><ArrowUpRight className="approach-arrow" size={19}/></motion.button>)}</div></section>;
 }
 
 function PortfolioIntro() {
@@ -82,20 +82,20 @@ function ParticlesPortrait() {
       sample.width = Math.max(1, Math.round(width));
       sample.height = Math.max(1, Math.round(height));
       sampleContext.clearRect(0, 0, sample.width, sample.height);
-      const scale = Math.min(sample.width / image.naturalWidth, sample.height / image.naturalHeight);
+      const scale = Math.max(sample.width / image.naturalWidth, sample.height / image.naturalHeight);
       const drawWidth = image.naturalWidth * scale;
       const drawHeight = image.naturalHeight * scale;
-      sampleContext.drawImage(image, (sample.width - drawWidth) / 2, (sample.height - drawHeight) * .35, drawWidth, drawHeight);
+      sampleContext.drawImage(image, (sample.width - drawWidth) / 2, (sample.height - drawHeight) * .5, drawWidth, drawHeight);
       const pixels = sampleContext.getImageData(0, 0, sample.width, sample.height).data;
       particles = [];
-      const gap = width < 500 ? 7 : width < 900 ? 6 : 5;
+      const gap = width < 500 ? 7 : 6;
       for (let y = 2; y < sample.height; y += gap) {
         for (let x = 2; x < sample.width; x += gap) {
           const index = (y * sample.width + x) * 4;
           const r = pixels[index], g = pixels[index + 1], b = pixels[index + 2];
           const luminance = (r * .299 + g * .587 + b * .114) / 255;
           const color = luminance < .18 ? '#10264f' : luminance < .32 ? '#183b65' : luminance < .48 ? '#f04b23' : luminance < .64 ? '#ff7043' : luminance < .80 ? '#e5a26e' : '#f5e99b';
-          particles.push({ x, y, ox: x, oy: y, vx: 0, vy: 0, color, size: width < 500 ? 3 + Math.random() : 3.1 + Math.random() });
+          particles.push({ x, y, ox: x, oy: y, vx: 0, vy: 0, color, size: width < 500 ? 4.1 + Math.random() * .8 : 4.2 + Math.random() * .8 });
         }
       }
       frame.classList.add('particle-ready');
@@ -161,6 +161,90 @@ function ParticlesPortrait() {
   return <div className="portrait-frame" ref={frameRef}><img ref={imageRef} src={portraitUrl} alt="Portrait of Parth Pawar"/><canvas className="portrait-particles" ref={canvasRef} aria-hidden="true"/><span className="particle-hint">MOVE TO DISTURB THE FIELD ↗</span></div>;
 }
 
+function ScrollParticleField() {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const zones = [[.10,.28,.23,.34],[.43,.72,.25,.24],[.77,.27,.20,.30],[.91,.78,.18,.25],[.24,.91,.19,.17]];
+    let width = 0, height = 0, dpr = 1, raf;
+    let particles = [];
+    let lastY = window.scrollY;
+    let burst = 0;
+    let direction = 1;
+    const schedule = () => { if (raf === undefined) raf = requestAnimationFrame(draw); };
+    const resize = () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      particles = [];
+      const gap = width < 650 ? 27 : 18;
+      for (let y = 12; y < height; y += gap) for (let x = 8; x < width; x += gap) {
+        let nearest = null;
+        let density = 0;
+        for (const [cx,cy,rx,ry] of zones) {
+          const dx = x / width - cx, dy = y / height - cy;
+          const distance = Math.sqrt((dx / rx) ** 2 + (dy / ry) ** 2);
+          if (distance < 1.15 && 1 - distance / 1.15 > density) { density = 1 - distance / 1.15; nearest = [cx * width, cy * height]; }
+        }
+        if (nearest && Math.random() < density * .92) {
+          particles.push({ x, y, ox: x, oy: y, cx: nearest[0], cy: nearest[1], vx: 0, vy: 0, alpha: .18 + density * .25, size: 1.5 + Math.random() * 2, color: Math.random() < .16 ? '#10264f' : Math.random() < .52 ? '#ff7043' : '#f04b23' });
+        }
+      }
+      schedule();
+    };
+    const draw = () => {
+      raf = undefined;
+      context.clearRect(0, 0, width, height);
+      let moving = false;
+      const scattering = burst > .012 && !reduced.matches;
+      for (const p of particles) {
+        if (scattering) {
+          const dx = p.x - p.cx, dy = p.y - p.cy;
+          const distance = Math.hypot(dx, dy) || 1;
+          const push = burst * .72;
+          p.vx += dx / distance * push;
+          p.vy += dy / distance * push - direction * burst * .11;
+        }
+        p.vx += (p.ox - p.x) * .035;
+        p.vy += (p.oy - p.y) * .035;
+        p.vx *= .84; p.vy *= .84;
+        p.x += p.vx; p.y += p.vy;
+        if (Math.abs(p.vx) > .07 || Math.abs(p.vy) > .07 || Math.abs(p.x - p.ox) > .2 || Math.abs(p.y - p.oy) > .2) moving = true;
+        context.globalAlpha = p.alpha;
+        context.fillStyle = p.color;
+        context.fillRect(p.x, p.y, p.size, p.size);
+      }
+      context.globalAlpha = 1;
+      if (scattering) burst *= .93;
+      if (moving || scattering) raf = requestAnimationFrame(draw);
+    };
+    const onScroll = () => {
+      const y = window.scrollY;
+      const delta = y - lastY;
+      lastY = y;
+      if (Math.abs(delta) < 1 || reduced.matches) return;
+      direction = Math.sign(delta);
+      burst = Math.min(1, burst + Math.abs(delta) * .012);
+      schedule();
+    };
+    window.addEventListener('resize', resize, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
+    resize();
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+  return <canvas className="scroll-particle-field" ref={canvasRef} aria-hidden="true"/>;
+}
+
 function ProjectArt({ kind }) {
   if (kind === 'eeg') return <div className="mock-window"><div className="mock-top"><i/><i/><i/></div><div className="cluster-tree"><span/><span/><span/><span/><span/><span/><b/><b/><b/></div><div className="mock-lines"><i/><i/><i/></div></div>;
   if (kind === 'campus') return <div className="mock-window campus-ui"><div className="mock-top"><i/><i/><i/></div><div className="ui-title">Good morning, Parth <span>☀️</span></div><div className="ui-boxes"><i/><i/><i/></div><div className="ui-row"><b/><span/><span/></div><div className="ui-row"><b/><span/><span/></div><div className="ui-row"><b/><span/><span/></div></div>;
@@ -185,7 +269,7 @@ function App() {
       document.body.style.overflow = previousOverflow;
     };
   }, [intro]);
-  return <><Header/><main id="home">
+  return <><ScrollParticleField/><Header/><main id="home">
     <section className="hero page-wrap"><div className="hero-copy"><div className="edition"><span>AI / ML</span><span>ENGINEERING · PRODUCTS · RESEARCH</span></div><p className="eyebrow">ENGINEER · BUILDER · ENTREPRENEUR</p><h1><span>PARTH</span><em>PAWAR</em></h1><p className="hero-sub">I build intelligent products and turn ideas into impact. I’m an AI/ML engineering student exploring machine learning, building practical products, and experimenting with technology that solves real problems.</p><div className="hero-actions"><a className="button button-dark" href="#work">Explore my work <ArrowDownRight size={17}/></a><a className="text-link" href={resume} target="_blank" rel="noreferrer">Download resume <ArrowDown size={15}/></a></div><div className="hero-meta"><span><MapPin size={15}/> Pune, India</span><span className="availability"><i/> Open to good ideas</span></div></div>
       <div className="portrait-stage"><Doodle className="doodle-star">✳</Doodle><Doodle className="doodle-smile">☺</Doodle><svg className="orbit" viewBox="0 0 540 540" fill="none" aria-hidden="true"><path d="M91 108C152 25 397 40 466 156c68 113-3 276-113 319C238 521 93 433 62 311 40 224 53 158 91 108Z" stroke="#315EFB" strokeWidth="1.5" strokeDasharray="5 7"/><path d="M50 370c-46 59 19 115 76 84" stroke="#ff8275" strokeWidth="2" strokeLinecap="round"/></svg><div className="portrait-blob"/><ParticlesPortrait/><div className="identity-card"><div className="identity-top"><b>Parth Pawar</b><span>He/Him</span></div><div><MapPin size={14}/> Pune, India</div><div><Mail size={14}/> parthpawarsnap11@gmail.com</div><div><BrainCircuit size={14}/> AI/ML Engineering</div><div className="identity-social"><a aria-label="LinkedIn" href="https://www.linkedin.com/in/parth-pawar/" target="_blank" rel="noreferrer"><BriefcaseBusiness size={15}/></a><a aria-label="GitHub" href="https://github.com/parthpawarsnap11-create" target="_blank" rel="noreferrer"><GitBranch size={15}/></a><span>Building what's next ↗</span></div></div><span className="hero-sticker">Build<br/>learn<br/>repeat.</span></div>
     </section>
